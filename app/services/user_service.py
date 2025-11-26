@@ -15,19 +15,28 @@ class UserService:
         last_name: str | None = None,
     ):
         """
-        добавляет пользователя в базу данных
+        добавляет пользователя в базу, обновляет если данные сменились, если данные не поменялись - возвращает
         """
 
         user = self.repo.get_user_by_id(db, chat_id)
 
         if user:
-            return self.repo.update_user(
-                db,
-                user,
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
+            new_data = {
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+            }
+
+            need_update = any(
+                getattr(user, field) != value
+                for field, value in new_data.items()
+                if value is not None
             )
+
+            if not need_update:
+                return user
+
+            return self.repo.update_user(db, user, **new_data)
 
         return self.repo.create_user(
             db,
