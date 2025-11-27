@@ -225,7 +225,7 @@ async def admin_export_excel(callback: CallbackQuery):
 
     await callback.message.answer_document(
         FSInputFile(filepath),
-        caption="📥 Готово! Вот файл со всеми заказами."
+        caption="Ваш excel файл со всеми заказами."
     )
 
     await callback.answer()
