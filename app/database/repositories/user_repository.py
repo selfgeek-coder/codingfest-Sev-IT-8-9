@@ -4,13 +4,13 @@ from ..models.user import User
 
 class UserRepository:
     def create_user(
-        self,
-        db: Session,
-        chat_id: int,
-        username: str | None = None,
-        first_name: str | None = None,
-        last_name: str | None = None,
-    ) -> User:
+            self,
+            db: Session,
+            chat_id: int,
+            username: str | None = None,
+            first_name: str | None = None,
+            last_name: str | None = None,
+        ) -> User:
 
         user = User(
             chat_id=chat_id,
@@ -26,13 +26,13 @@ class UserRepository:
         return user
 
     def update_user(
-        self,
-        db: Session,
-        user: User,
-        username: str | None = None,
-        first_name: str | None = None,
-        last_name: str | None = None,
-    ) -> User:
+            self,
+            db: Session,
+            user: User,
+            username: str | None = None,
+            first_name: str | None = None,
+            last_name: str | None = None,
+        ) -> User:
 
         if username is not None:
             user.username = username
