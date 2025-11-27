@@ -7,7 +7,16 @@ load_dotenv()
 
 class Settings:
     database_url = getenv("DATABASE_URL")
+
     token = getenv("TOKEN")
+
+    admins = [
+        int(x.strip())
+        for x in getenv("ADMINS", "").split(",")
+        if x.strip().isdigit()
+    ]
+
+    # print(admins)
 
     densities = {
         "PLA": 1.24,
@@ -22,7 +31,8 @@ class Settings:
     }
 
     human_status = {
-        OrderStatus.created: "🆕 Создан",
-        OrderStatus.processing: "В процессе разработки...",
-        OrderStatus.done: "✅ Завершен и готов к выдаче"
+        OrderStatus.created: "Создан",
+        OrderStatus.processing: "В процессе",
+        OrderStatus.done: "Завершен",
+        OrderStatus.closed: "Закрыт"
     } # человеческие обозначения с OrderStatus

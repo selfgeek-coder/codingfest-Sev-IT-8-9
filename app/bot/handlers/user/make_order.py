@@ -1,22 +1,27 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-import os
+from aiogram.types import FSInputFile
 
-from app.bot.keyboards.order_menu import (
+import os
+import logging
+
+from app.bot.keyboards.user.make_order_menu import (
     cancel_kb,
     material_kb,
     color_kb,
     skip_kb,
-    confirm_kb
+    confirm_kb,
+    my_orders_kb
 )
 
 from app.services.calc_service import CalcService
 from app.database.session import SessionLocal
 from app.services.user_service import UserService
 from app.services.order_service import OrderService
-from app.utils import gen_random_name
-from ..states.order_fsm import OrderFSM
+from app.utils import gen_random_name, validate_fullname
+from ...states.order_fsm import OrderFSM
+from config import Settings
 
 router = Router()
 
@@ -44,10 +49,15 @@ async def get_stl(message: Message, state: FSMContext, bot: Bot):
     os.makedirs("files", exist_ok=True)
     file = await bot.get_file(message.document.file_id)
 
-    path = f"files/{gen_random_name(message.document.file_name)}" # айди файла в телеграме|название файла
+    # имя файла без .stl
+    original_name = os.path.splitext(message.document.file_name)[0]
+
+    # генерируем уникальный путь для сохранения
+    path = f"files/{gen_random_name(original_name)}.stl"
+
     await bot.download(file, destination=path)
 
-    await state.update_data(stl_path=path)
+    await state.update_data(stl_path=path, file_name=original_name)
 
     await bot.delete_message(chat_id=message.chat.id, message_id=processing_msg.message_id)
 
@@ -56,6 +66,7 @@ async def get_stl(message: Message, state: FSMContext, bot: Bot):
         reply_markup=cancel_kb()
     )
     await state.set_state(OrderFSM.quantity)
+
 
 
 # получили количество, получаем вид пластика
@@ -126,14 +137,21 @@ async def get_color(callback: CallbackQuery, state: FSMContext):
 # получаем дополнительные пожелания
 @router.message(OrderFSM.full_name)
 async def get_fullname(message: Message, state: FSMContext):
+    if not validate_fullname(message.text):
+        return await message.answer(
+            "Пожалуйста, введите корректные имя и фамилию.\n"
+            "Пример: *Иван Петров*",
+            parse_mode="Markdown",
+            reply_markup=cancel_kb()
+        )
+
     await state.update_data(full_name=message.text)
 
     await message.answer(
-        "Добавьте дополнительные пожелания или нажмите «Пропустить»:",
+        "Добавьте дополнительные пожелания или нажмите 'Пропустить':",
         reply_markup=skip_kb()
     )
     await state.set_state(OrderFSM.notes)
-
 
 
 @router.callback_query(F.data == "skip_notes", OrderFSM.notes)
@@ -145,7 +163,6 @@ async def skip_notes(callback: CallbackQuery, state: FSMContext):
 
     await state.set_state(OrderFSM.confirm)
     await callback.answer()
-
 
 
 @router.message(OrderFSM.notes)
@@ -205,7 +222,7 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
     db = SessionLocal()
 
 
-    user = user_service.repo.get_user_by_id(db, callback.from_user.id)
+    user = user_service.repo.get_user_by_chat_id(db, callback.from_user.id)
 
     if not user:
         user = user_service.create_user(
@@ -219,6 +236,7 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
     order = order_service.create_order(
         db=db,
         user_id=user.id,
+        name=data["file_name"],
         quantity=data["quantity"],
         material=data["material"],
         color=data["color"],
@@ -229,13 +247,49 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
         unit_price_rub=data["price_one"]
     )
 
+    try:
+        # отправляем сообщение администратор(ам)
+        text = (
+            f"Поступил *Новый заказ* #{order.id} от @{callback.from_user.username or 'без username'} (ID {callback.from_user.id})\n\n"
+            f"*Название*: {data["file_name"]}\n\n"
+            f"*Количество моделей*: {data['quantity']}\n\n"
+            f"*Пластик*: {data['material']}\n"
+            f"*Цвет*: {data['color']}\n\n"
+            f"*Сумма заказа*: {data['total_price']} ₽\n\n"
+            f"*Подробнее можно посмотреть в админ-панели (/admin)*"
+        )
+
+        for admin in Settings.admins:
+            await callback.bot.send_message(
+                chat_id=admin,
+                text=text,
+                parse_mode="Markdown"
+            )
+
+            stl_file = FSInputFile(data["stl_path"])
+
+            try:
+                await callback.bot.send_document(
+                    chat_id=admin,
+                    document=stl_file,
+                    caption=f"*STL файл* для заказа #{order.id}",
+                    parse_mode="Markdown"
+                )
+                
+            except Exception as e:
+                logging.error(f"Ошибка при отправки .stl файла администратору: {e}")
+
+
+    except Exception as e:
+        logging.error("Ошибка отправки уведомления админу:", e)
 
     await processing_msg.delete()
 
     await callback.message.edit_text(
         f"Ваш заказ *№{order.id}* успешно сохранен!\n\n"
         f"Отслеживать статус заказа вы можете в разделе 'Мои заказы'.",
-        parse_mode="Markdown"
+        parse_mode="Markdown",
+        reply_markup=my_orders_kb()
     )
     
     await state.clear()

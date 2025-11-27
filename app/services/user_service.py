@@ -15,10 +15,10 @@ class UserService:
         last_name: str | None = None,
     ):
         """
-        добавляет пользователя в базу, обновляет если данные сменились, если данные не поменялись - возвращает
+        создает пользователя, либо обновляет данные, если он уже существует
         """
 
-        user = self.repo.get_user_by_id(db, chat_id)
+        user = self.repo.get_user_by_chat_id(db, chat_id)
 
         if user:
             new_data = {
@@ -46,16 +46,12 @@ class UserService:
             last_name=last_name,
         )
 
-    def delete_user(
-            self,    
-            db: Session,
-            chat_id: int
-        ) -> bool:
+    def delete_user(self, db: Session, chat_id: int) -> bool:
         """
-        удаляет пользователя с бд по chat_id
+        удаляет пользователя по его chat_id
         """
 
-        user = self.repo.get_user_by_id(db, chat_id)
+        user = self.repo.get_user_by_chat_id(db, chat_id)
         
         if not user:
             return False

@@ -52,5 +52,8 @@ class UserRepository:
         db.delete(user)
         db.commit()
 
-    def get_user_by_id(self, db: Session, chat_id: int) -> User | None:
+    def get_user_by_chat_id(self, db: Session, chat_id: int):
         return db.query(User).filter(User.chat_id == chat_id).first()
+
+    def get_user_by_db_id(self, db: Session, user_id: int):
+        return db.query(User).filter(User.id == user_id).first()

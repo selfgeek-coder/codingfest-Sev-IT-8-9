@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Enum
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Enum, DateTime
 from sqlalchemy.orm import relationship
 
 from ..session import Base
@@ -13,6 +14,8 @@ class Order(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User")
 
+    name = Column(String(255), nullable=False)
+
     quantity = Column(Integer, nullable=False)
     material = Column(String(50), nullable=False)
     color = Column(String(100), nullable=False)
@@ -20,15 +23,20 @@ class Order(Base):
     notes = Column(String(500))
     stl_path = Column(String(500), nullable=False)
 
-    price_rub = Column(Float, nullable=False)   # общая цена
-    unit_price_rub = Column(Float, nullable=False)  # цена за 1 штуку
+    price_rub = Column(Float, nullable=False)
+    unit_price_rub = Column(Float, nullable=False)
 
     status = Column(
         Enum(OrderStatus, name="order_status_enum"),
         nullable=False,
-        default=OrderStatus.created
+        default=OrderStatus.created,
+    )
+
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
     )
 
     def __repr__(self):
         return f"<Order id={self.id} user_id={self.user_id}>"
-

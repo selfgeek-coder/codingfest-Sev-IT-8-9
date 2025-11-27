@@ -63,3 +63,10 @@ def confirm_kb():
             InlineKeyboardButton(text="Нет, изменить", callback_data="confirm_no")
         ]
     ])
+
+def my_orders_kb():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Мои заказы", callback_data="my_orders")
+        ]
+    ])

@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+
+from app.enums.order_status import OrderStatus
 from ..models.orders import Order
 
 
@@ -8,6 +10,7 @@ class OrderRepository:
                 self,
                 db: Session,
                 user_id: int,
+                name: str,
                 quantity: int,
                 material: str,
                 color: str,
@@ -20,6 +23,7 @@ class OrderRepository:
 
         order = Order(
             user_id=user_id,
+            name=name,
             quantity=quantity,
             material=material,
             color=color,
@@ -45,3 +49,33 @@ class OrderRepository:
 
     def get_orders_by_user(self, db: Session, user_id: int) -> list[Order]:
         return db.query(Order).filter(Order.user_id == user_id).all()
+
+    def update_order_status(self, db: Session, order: Order, new_status: OrderStatus) -> Order:
+        order.status = new_status
+        db.commit()
+        db.refresh(order)
+        return order
+    
+    def get_all_open_orders(self, db: Session) -> list[Order]:
+        return (
+            db.query(Order)
+            .filter(Order.status != OrderStatus.closed)
+            .order_by(Order.id.desc())
+            .all()
+        )
+
+
+    def get_all_closed_orders(self, db: Session) -> list[Order]:
+        return (
+            db.query(Order)
+            .filter(Order.status == OrderStatus.closed)
+            .order_by(Order.id.desc())
+            .all()
+        )
+
+    def get_all_orders(self, db: Session) -> list[Order]:
+        return (
+            db.query(Order)
+            .order_by(Order.id.desc())
+            .all()
+        )
