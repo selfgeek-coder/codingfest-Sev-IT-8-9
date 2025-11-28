@@ -5,6 +5,8 @@ from aiogram.filters import Command
 from app.services.user_service import UserService
 from app.database.database import get_db
 from ...keyboards.user.main_menu import get_main_keyboard
+from ...keyboards.admin.main_menu import get_admin_main_keyboard
+from app.utils import is_admin
 
 router = Router()
 user_service = UserService()
@@ -20,11 +22,20 @@ async def start(message: Message):
             last_name=message.from_user.last_name
         )
 
-    await message.answer(
-        f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
-        reply_markup=get_main_keyboard(),
-        parse_mode="Markdown"
-    )
+    if is_admin(message.from_user.id):
+        await message.answer(
+            f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
+            reply_markup=get_admin_main_keyboard(),
+            parse_mode="Markdown"
+        )
+
+    else:
+        await message.answer(
+            f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
+            reply_markup=get_main_keyboard(),
+            parse_mode="Markdown"
+        )
+    
 
 
 @router.callback_query(F.data == "main_menu")
@@ -38,11 +49,19 @@ async def start(callback: CallbackQuery):
             last_name=callback.from_user.last_name
         )
 
-    await callback.message.edit_text(
-        f"Привет, {callback.from_user.first_name}.\n\n"
-        f"В этом боте ты можешь заказать *печатную продукцию*",
-        reply_markup=get_main_keyboard(),
-        parse_mode="Markdown"
-    )
+    if is_admin(callback.from_user.id):
+        await callback.message.edit_text(
+            f"Привет, {callback.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
+            reply_markup=get_admin_main_keyboard(),
+            parse_mode="Markdown"
+        )
+
+    else:
+        await callback.message.edit_text(
+            f"Привет, {callback.from_user.first_name}.\n\n"
+            f"В этом боте ты можешь заказать *печатную продукцию*",
+            reply_markup=get_main_keyboard(),
+            parse_mode="Markdown"
+        )
 
     await callback.answer()

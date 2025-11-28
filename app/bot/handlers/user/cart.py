@@ -10,6 +10,8 @@ from ...keyboards.user.back_kb import back_kb
 
 from config import Settings
 
+import time
+
 router = Router()
 
 cart_service = CartService()
@@ -98,8 +100,16 @@ async def checkout(callback: CallbackQuery, bot: Bot):
             except Exception as e:
                 print(f"Ошибка отправки админу {admin_id}: {e}")
 
-    await callback.message.edit_text(
-        "🎉 Все товары успешно оформлены.",
-        parse_mode="Markdown"
+
+
+    await callback.message.answer(
+        "🎉"
     )
+
+    time.sleep(0.5)
+
+    await callback.message.answer(
+        "Товары успешно оформлены."
+    )
+
     await callback.answer()

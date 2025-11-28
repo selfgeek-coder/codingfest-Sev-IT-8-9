@@ -1,9 +1,7 @@
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, FSInputFile
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-import app.excel
 from app.services.user_service import UserService
 from app.database.session import SessionLocal
 from app.services.order_service import OrderService
@@ -24,17 +22,6 @@ router = Router()
 
 order_service = OrderService()
 user_service = UserService()
-
-@router.message(Command("admin"))
-async def admin_panel(message: Message):
-    if not is_admin(message.from_user.id):
-        return
-
-    await message.answer(
-        "⚙️ *Админ-панель*\n\nВыберите действие:",
-        parse_mode="Markdown",
-        reply_markup=admin_main_menu_kb()
-    )
 
 @router.callback_query(F.data == "admin_panel")
 async def admin_panel(callback: CallbackQuery):

@@ -1,6 +1,6 @@
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 
-def get_main_keyboard():
+def get_admin_main_keyboard():
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -16,6 +16,11 @@ def get_main_keyboard():
             [
                 InlineKeyboardButton(
                     text="Корзина", callback_data="open_cart"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Админ панель", callback_data="admin_panel"
                 )
             ]
         ]
