@@ -16,9 +16,6 @@ class Settings:
         if x.strip().isdigit()
     ]
 
-    power_consumption_kw = 0.3  # потребление принтера в кВт
-    electricity_price_per_kwh = 5.0 # цена электричества в руб/ктч
-
     materials = {
         "PLA": {
             "density": 1.24,
