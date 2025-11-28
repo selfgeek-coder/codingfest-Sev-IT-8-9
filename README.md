@@ -89,5 +89,5 @@ python main.py
 - Управление статусами заказов, выгрузка excel таблицы (админ)
 
 ### Небольшие видеообзоры возможностей бота
-- Пользователь [Видео](https://github.com/user-attachments/assets/f9b09812-12ce-47a9-ae8d-b808f1a0ee5d)
-- Администратор [Видео](https://github.com/user-attachments/assets/59497c81-2b12-4a09-bb03-8460a6d5e09a)
+- Пользователь [Видео](https://drive.google.com/file/d/1wIurFfH6ES7LUMHX0S1fGklibmk2z9oO/view?usp=sharing)
+- Администратор [Видео](https://drive.google.com/file/d/1L34L1Xh1KoFIuuBWiuu1QkdzV8b21tXM/view?usp=sharing)
