@@ -16,7 +16,7 @@ class CalcService:
         }
         """
 
-        if material not in Settings.densities:
+        if material not in Settings.materials:
             raise ValueError("Unknown material")
 
         m = mesh.Mesh.from_file(file_path)
@@ -26,18 +26,19 @@ class CalcService:
         volume_cm3 = volume_mm3 / 1000
 
         # масса
-        density = Settings.densities[material]
+        density = Settings.materials[material]["density"]
         weight_g = volume_cm3 * density
 
         # время печати
         time_h = volume_cm3 / speed
 
         # цена
-        price_rub = (weight_g / 1000) * Settings.prices[material]
+        price_per_kg = Settings.materials[material]["price"]
+        price_rub = (weight_g / 1000) * price_per_kg
 
         return {
             "volume_cm3": round(volume_cm3, 2),
             "weight_g": round(weight_g, 2),
             "print_time_h": round(time_h, 2),
-            "price_rub": round(price_rub, 2)
+            "price_rub": round(price_rub, 2) 
         }

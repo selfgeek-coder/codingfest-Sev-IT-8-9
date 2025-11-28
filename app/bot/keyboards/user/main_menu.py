@@ -12,6 +12,11 @@ def get_main_keyboard():
                 InlineKeyboardButton(
                     text="Мои заказы", callback_data="my_orders"
                 )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Корзина", callback_data="open_cart"
+                )
             ]
         ]
     )

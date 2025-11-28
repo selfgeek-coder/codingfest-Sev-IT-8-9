@@ -2,6 +2,8 @@ from aiogram.types import (
     InlineKeyboardMarkup, InlineKeyboardButton
 )
 
+from config import Settings
+
 def cancel_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Отменить", callback_data="cancel_order")]
@@ -11,16 +13,16 @@ def cancel_kb():
 def color_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="⬛ Черный", callback_data="color_Черный")
+            InlineKeyboardButton(text="Черный", callback_data="color_Черный")
         ],
         [
-            InlineKeyboardButton(text="⬜ Белый", callback_data="color_Белый")
+            InlineKeyboardButton(text="Белый", callback_data="color_Белый")
         ],
         [
-            InlineKeyboardButton(text="🟥 Красный", callback_data="color_Красный")
+            InlineKeyboardButton(text="Красный", callback_data="color_Красный")
         ],
         [
-            InlineKeyboardButton(text="🟦 Синий", callback_data="color_Синий")
+            InlineKeyboardButton(text="Синий", callback_data="color_Синий")
         ],
         [
             InlineKeyboardButton(text="Свой цвет", callback_data="color_custom")
@@ -32,20 +34,18 @@ def color_kb():
 
 
 def material_kb():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="PLA", callback_data="mat_PLA"),
-        ],
-        [
-            InlineKeyboardButton(text="PETG", callback_data="mat_PETG"),
-        ],
-        [
-            InlineKeyboardButton(text="ABS", callback_data="mat_ABS"),
-        ],
-        [
-            InlineKeyboardButton(text="Отменить", callback_data="cancel_order")
-            ]
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+    keyboard = [
+        [InlineKeyboardButton(text=name, callback_data=f"mat_{name}")]
+        for name in Settings.materials.keys()
+    ]
+
+    keyboard.append([
+        InlineKeyboardButton(text="Отменить", callback_data="cancel_order")
     ])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
 def skip_kb():

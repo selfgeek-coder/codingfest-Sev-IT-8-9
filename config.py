@@ -16,18 +16,22 @@ class Settings:
         if x.strip().isdigit()
     ]
 
-    # print(admins)
+    power_consumption_kw = 0.3  # потребление принтера в кВт
+    electricity_price_per_kwh = 5.0 # цена электричества в руб/ктч
 
-    densities = {
-        "PLA": 1.24,
-        "ABS": 1.04,
-        "PETG": 1.27
-    }
-
-    prices = {
-        "PLA": 1000,
-        "ABS": 1000,
-        "PETG": 1200
+    materials = {
+        "PLA": {
+            "density": 1.24,
+            "price": 1000
+        },
+        "ABS": {
+            "density": 1.04,
+            "price": 1000
+        },
+        "PETG": {
+            "density": 1.27,
+            "price": 1200
+        }
     }
 
     human_status = {

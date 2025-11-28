@@ -98,18 +98,28 @@ async def admin_show_order(callback: CallbackQuery):
     user = user_service.repo.get_user_by_db_id(db, order.user_id)
 
     text = (
-        f"📝 *Заказ №{order.id}*\n\n"
-        f"👤 Пользователь: @{user.username or 'нет'}\n"
-        f"ID: {user.chat_id}\n"
-        f"ФИ: {order.full_name}\n\n"
-        f"📄 Модель: {order.name}\n"
-        f"Количество: {order.quantity}\n"
-        f"Материал: {order.material}\n"
-        f"Цвет: {order.color}\n"
-        f"Пожелания: {order.notes}\n\n"
-        f"💰 Цена: {order.price_rub} ₽\n"
-        f"📌 Статус: *{order.status.value}*"
+        f"📝 *Заказ №{order.id}* создан {order.created_at}\n\n"
+        f"*Пользователь*:\n"
+        f" ├ @{user.username or 'нет'}\n"
+        f" └ ID: {user.chat_id}\n\n"
+        
+        f"*Получатель*:\n"
+        f" └ {order.full_name}\n\n"
+
+        f"*Детали заказа*:\n"
+        f" ├ Модель: {order.name}\n"
+        f" ├ Количество: {order.quantity}\n"
+        f" ├ Материал: {order.material}\n"
+        f" ├ Цвет: {order.color}\n"
+        f" └ Пожелания: {order.notes or 'нет'}\n\n"
+
+        f"*Цена*:\n"
+        f" ├ {order.price_rub} ₽ всего\n"
+        f" └ {order.unit_price_rub} ₽ за 1 шт.\n\n"
+
+        f"Статус заказа: *{Settings.human_status.get(order.status, order.status.value)}*"
     )
+
 
     try:
         await callback.message.delete()
