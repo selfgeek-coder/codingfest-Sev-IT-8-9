@@ -24,6 +24,60 @@ router = Router()
 order_service = OrderService()
 user_service = UserService()
 
+
+async def admin_show_order(callback: CallbackQuery, order_id: int):
+    """Показывает один заказ полностью"""
+
+    if not is_admin(callback.from_user.id):
+        return
+
+    db = SessionLocal()
+    order = order_service.get_order(db, order_id)
+    user = user_service.repo.get_user_by_db_id(db, order.user_id)
+
+    text = (
+        f"📝 *Заказ №{order.id}* - {order.name}\n\n"
+        f"Создан в {order.created_at}\n\n"
+        f"*Пользователь*:\n"
+        f" ├ @{user.username or 'нет'}\n"
+        f" └ ID: {user.chat_id}\n\n"
+        
+        f"*Получатель*:\n"
+        f" └ {order.full_name}\n\n"
+
+        f"*Детали заказа*:\n"
+        f" ├ Модель: {order.name}\n"
+        f" ├ Количество: {order.quantity}\n"
+        f" ├ Материал: {order.material}\n"
+        f" ├ Цвет: {order.color}\n"
+        f" └ Пожелания: {order.notes or '/'}\n\n"
+
+        f"*Цена*:\n"
+        f" ├ {order.price_rub} ₽ всего\n"
+        f" └ {order.unit_price_rub} ₽ за 1 шт.\n\n"
+
+        f"Позиция в очереди: {order.queue_position}\n"
+        f"Статус заказа: *{Settings.human_status.get(order.status, order.status.value)}*"
+    )
+
+    try:
+        await callback.message.delete()
+    except Exception as e:
+        logging.error(e)
+
+    stl = FSInputFile(order.stl_path)
+
+    await callback.message.answer_document(
+        document=stl,
+        caption=text,
+        parse_mode="Markdown",
+        reply_markup=admin_order_actions_kb(order_id)
+    )
+
+    await callback.answer()
+
+
+
 @router.callback_query(F.data == "admin_panel")
 async def admin_panel(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
@@ -36,6 +90,7 @@ async def admin_panel(callback: CallbackQuery):
         parse_mode="Markdown",
         reply_markup=admin_main_menu_kb()
     )
+
 
 @router.callback_query(F.data == "admin_orders_menu")
 async def admin_orders_menu(callback: CallbackQuery):
@@ -75,57 +130,12 @@ async def admin_page(callback: CallbackQuery):
 
 
 @router.callback_query(F.data.startswith("admin_order_"))
-async def admin_show_order(callback: CallbackQuery):
+async def admin_show_order_handler(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
         return
 
     order_id = int(callback.data.replace("admin_order_", ""))
-    db = SessionLocal()
-    order = order_service.get_order(db, order_id)
-
-    user = user_service.repo.get_user_by_db_id(db, order.user_id)
-
-    text = (
-        f"📝 *Заказ №{order.id}* - {order.name}\n\n"
-        f"Создан в {order.created_at}\n\n"
-        f"*Пользователь*:\n"
-        f" ├ @{user.username or 'нет'}\n"
-        f" └ ID: {user.chat_id}\n\n"
-        
-        f"*Получатель*:\n"
-        f" └ {order.full_name}\n\n"
-
-        f"*Детали заказа*:\n"
-        f" ├ Модель: {order.name}\n"
-        f" ├ Количество: {order.quantity}\n"
-        f" ├ Материал: {order.material}\n"
-        f" ├ Цвет: {order.color}\n"
-        f" └ Пожелания: {order.notes or '/'}\n\n"
-
-        f"*Цена*:\n"
-        f" ├ {order.price_rub} ₽ всего\n"
-        f" └ {order.unit_price_rub} ₽ за 1 шт.\n\n"
-
-        f"Статус заказа: *{Settings.human_status.get(order.status, order.status.value)}*"
-    )
-
-    try:
-        await callback.message.delete()
-
-    except Exception as e:
-        logging.error(e)
-
-    stl = FSInputFile(order.stl_path)
-
-    await callback.message.answer_document(
-        document=stl,
-        caption=text,
-        parse_mode="Markdown",
-        reply_markup=admin_order_actions_kb(order_id)
-    )
-
-    await callback.answer()
-
+    await admin_show_order(callback, order_id)
 
 
 @router.callback_query(F.data == "admin_back_to_orders")
@@ -135,7 +145,6 @@ async def admin_back(callback: CallbackQuery):
 
     try:
         await callback.message.delete()
-
     except Exception as e:
         logging.error(e)
 
@@ -186,12 +195,14 @@ async def admin_confirm_status(callback: CallbackQuery, bot: Bot):
 
     user = user_service.repo.get_user_by_db_id(db, order.user_id)
 
+    # отправка уведомления юзеру
     try:
         await bot.send_message(
             chat_id=user.chat_id,
             text=(
                 f"🔔 *Обновление статуса вашего заказа*.\n\n"
-                f"Статус вашего заказа №*{order_id}* был изменен на: '{Settings.human_status.get(OrderStatus(new_status), order.status.value)}'"
+                f"Статус вашего заказа №*{order_id}* был изменен на: "
+                f"'{Settings.human_status.get(OrderStatus(new_status), order.status.value)}'"
             ),
             parse_mode="Markdown"
         )
@@ -205,6 +216,8 @@ async def admin_confirm_status(callback: CallbackQuery, bot: Bot):
     )
 
     await callback.answer("Статус обновлен")
+
+
 
 @router.callback_query(F.data == "admin_export_excel")
 async def admin_export_excel(callback: CallbackQuery):
@@ -223,3 +236,28 @@ async def admin_export_excel(callback: CallbackQuery):
     )
 
     await callback.answer()
+
+
+
+@router.callback_query(F.data.startswith("admin_q_up_"))
+async def admin_q_up(callback: CallbackQuery):
+    order_id = int(callback.data.replace("admin_q_up_", ""))
+    db = SessionLocal()
+
+    order_service.move_up(db, order_id)
+    order_service.repo.normalize_queue(db)
+
+    await callback.answer("Перемещено ↑")
+    await admin_show_order(callback, order_id)
+
+
+@router.callback_query(F.data.startswith("admin_q_down_"))
+async def admin_q_down(callback: CallbackQuery):
+    order_id = int(callback.data.replace("admin_q_down_", ""))
+    db = SessionLocal()
+
+    order_service.move_down(db, order_id)
+    order_service.repo.normalize_queue(db)
+
+    await callback.answer("Перемещено ↓")
+    await admin_show_order(callback, order_id)

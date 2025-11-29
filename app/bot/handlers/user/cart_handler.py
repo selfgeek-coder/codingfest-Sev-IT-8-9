@@ -75,6 +75,12 @@ async def checkout(callback: CallbackQuery, bot: Bot):
 
     created_orders = []
 
+    existing_queue = order_service.get_queue(db)
+    next_position = (
+        existing_queue[-1].queue_position + 1
+        if existing_queue else 1
+    )
+
     for item in cart:
         order = order_service.create_order(
             db=db,
@@ -87,29 +93,29 @@ async def checkout(callback: CallbackQuery, bot: Bot):
             notes=item.notes,
             stl_path=item.stl_path,
             price_rub=item.price_rub,
-            unit_price_rub=item.unit_price_rub
+            unit_price_rub=item.unit_price_rub,
+            queue_position=next_position
         )
+
         created_orders.append(order)
+        next_position += 1  
 
     cart_service.clear_cart(db, user.id)
 
     for order in created_orders:
         for admin_id in Settings.admins:
             try:
-                await bot.send_message(admin_id, f"Поступил новый заказ №{order.id} - {order.name}.", parse_mode="Markdown")
+                await bot.send_message(
+                    admin_id,
+                    f"Новый заказ №{order.id} — {order.name}\n"
+                    f"Позиция в очереди: {order.queue_position}",
+                    parse_mode="Markdown"
+                )
             except Exception as e:
                 print(f"Ошибка отправки админу {admin_id}: {e}")
 
-
-
-    await callback.message.answer(
-        "🎉"
-    )
-
+    await callback.message.answer("🎉")
     time.sleep(0.5)
-
-    await callback.message.answer(
-        "Товары успешно оформлены."
-    )
+    await callback.message.answer("Товары успешно оформлены.")
 
     await callback.answer()

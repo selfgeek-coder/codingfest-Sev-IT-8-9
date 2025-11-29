@@ -20,7 +20,8 @@ class OrderService:
                 notes: str,
                 stl_path: str,
                 price_rub: float,
-                unit_price_rub: float
+                unit_price_rub: float,
+                queue_position: int | None = None
             ):
         """
         создает заказ
@@ -37,7 +38,8 @@ class OrderService:
             notes=notes,
             stl_path=stl_path,
             price_rub=price_rub,
-            unit_price_rub=unit_price_rub
+            unit_price_rub=unit_price_rub,
+            queue_position=queue_position
         )
 
 
@@ -87,3 +89,32 @@ class OrderService:
 
     def get_all_closed_orders(self, db: Session):
         return self.repo.get_all_closed_orders(db)
+
+    def get_queue(self, db: Session):
+            return self.repo.get_print_queue(db)
+
+    def move_up(self, db: Session, order_id: int):
+        queue = self.get_queue(db)
+        order = self.repo.get_order_by_id(db, order_id)
+
+        i = order.queue_position
+        if i <= 1:
+            return False
+
+        upper = next(o for o in queue if o.queue_position == i - 1)
+        order.queue_position, upper.queue_position = upper.queue_position, order.queue_position
+        db.commit()
+        return True
+
+    def move_down(self, db: Session, order_id: int):
+        queue = self.get_queue(db)
+        order = self.repo.get_order_by_id(db, order_id)
+
+        i = order.queue_position
+        if i == queue[-1].queue_position:
+            return False
+
+        lower = next(o for o in queue if o.queue_position == i + 1)
+        order.queue_position, lower.queue_position = lower.queue_position, order.queue_position
+        db.commit()
+        return True

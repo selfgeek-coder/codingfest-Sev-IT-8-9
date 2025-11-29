@@ -68,6 +68,8 @@ async def order_details_handler(callback: CallbackQuery):
 
     human_status = Settings.human_status.get(order.status, order.status.value)
 
+    
+
     text = (
         f"*Информация о заказе №{order.id}* ({order.name})\n\n"
         f"*Статус заказа:* {human_status}\n\n"
@@ -78,6 +80,11 @@ async def order_details_handler(callback: CallbackQuery):
         f"*Итого:* {order.price_rub} ₽\n\n"
         f"*Примечание:* {order.notes or '-'}\n"
     )
+
+    queue = order_service.get_queue(db)
+    pos = next((i+1 for i, o in enumerate(queue) if o.id == order.id), None)
+
+    text += f"\n*Позиция в очереди:* {pos or '-'}"
 
     await callback.message.edit_text(
         text,

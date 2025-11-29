@@ -64,6 +64,8 @@ def admin_orders_page_kb(orders, page: int, per_page: int = 8):
 def admin_order_actions_kb(order_id: int):
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(text="Поднять в очереди", callback_data=f"admin_q_up_{order_id}")],
+            [InlineKeyboardButton(text="Опустить в очереди", callback_data=f"admin_q_down_{order_id}")],
             [InlineKeyboardButton(text="Изменить статус", callback_data=f"admin_change_status_{order_id}")],
             [InlineKeyboardButton(text="Назад", callback_data="admin_back_to_orders")],
         ]

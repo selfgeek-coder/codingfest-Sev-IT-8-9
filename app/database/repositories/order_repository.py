@@ -18,7 +18,8 @@ class OrderRepository:
                 notes: str,
                 stl_path: str,
                 price_rub: float,
-                unit_price_rub: float
+                unit_price_rub: float,
+                queue_position: int | None = None
             ) -> Order:
 
         order = Order(
@@ -31,7 +32,8 @@ class OrderRepository:
             notes=notes,
             stl_path=stl_path,
             price_rub=price_rub,
-            unit_price_rub=unit_price_rub
+            unit_price_rub=unit_price_rub,
+            queue_position=queue_position
         )
 
         db.add(order)
@@ -79,3 +81,30 @@ class OrderRepository:
             .order_by(Order.id.desc())
             .all()
         )
+    
+    def get_print_queue(self, db: Session):
+        return (
+            db.query(Order)
+            .filter(Order.status.in_([
+                OrderStatus.created,
+                OrderStatus.accepted,
+                OrderStatus.processing
+            ]))
+            .order_by(Order.queue_position.asc().nulls_last())
+            .all()
+        )
+
+
+
+    def set_order_position(self, db: Session, order: Order, position: int):
+        order.queue_position = position
+        db.commit()
+        db.refresh(order)
+        return order
+
+    def normalize_queue(self, db: Session):
+        """Пронумеровать все заказы заново с 1 без пропусков"""
+        queue = self.get_print_queue(db)
+        for i, order in enumerate(queue, start=1):
+            order.queue_position = i
+        db.commit()
