@@ -24,14 +24,14 @@ async def start(message: Message):
 
     if is_admin(message.from_user.id):
         await message.answer(
-            f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
+            f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать 3D *печатную продукцию*",
             reply_markup=get_admin_main_keyboard(),
             parse_mode="Markdown"
         )
 
     else:
         await message.answer(
-            f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
+            f"Привет, {message.from_user.first_name}.\n\nВ этом боте ты можешь заказать 3D *печатную продукцию*",
             reply_markup=get_main_keyboard(),
             parse_mode="Markdown"
         )
@@ -51,7 +51,7 @@ async def start(callback: CallbackQuery):
 
     if is_admin(callback.from_user.id):
         await callback.message.edit_text(
-            f"Привет, {callback.from_user.first_name}.\n\nВ этом боте ты можешь заказать *печатную продукцию*",
+            f"Привет, {callback.from_user.first_name}.\n\nВ этом боте ты можешь заказать 3D *печатную продукцию*",
             reply_markup=get_admin_main_keyboard(),
             parse_mode="Markdown"
         )
@@ -59,7 +59,7 @@ async def start(callback: CallbackQuery):
     else:
         await callback.message.edit_text(
             f"Привет, {callback.from_user.first_name}.\n\n"
-            f"В этом боте ты можешь заказать *печатную продукцию*",
+            f"В этом боте ты можешь заказать 3D *печатную продукцию*",
             reply_markup=get_main_keyboard(),
             parse_mode="Markdown"
         )
