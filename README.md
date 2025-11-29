@@ -86,8 +86,8 @@ python main.py
 ### Возможности бота
 - Создание заказов, отправка в корзину, отслеживание статусов заказов (пользователь)
 
-- Управление статусами заказов, выгрузка excel-таблицы (администратор)
+- Управление статусами заказов, управление очередями заказов, выгрузка excel-таблицы (администратор)
 
 ### Небольшие видеообзоры возможностей бота
-- Пользователь [Видео](https://drive.google.com/file/d/1wIurFfH6ES7LUMHX0S1fGklibmk2z9oO/view?usp=sharing)
-- Администратор [Видео](https://drive.google.com/file/d/1L34L1Xh1KoFIuuBWiuu1QkdzV8b21tXM/view?usp=sharing)
+- Пользователь [Видео](https://drive.google.com/file/d/1ZezJEcWZdLEZPu80kg9aaOxZQ8agXuR4/view?usp=sharing)
+- Администратор [Видео](https://drive.google.com/file/d/1iJv3PITAUQYRQnfOcHN0IKUxqPWAwfiy/view?usp=sharing)
