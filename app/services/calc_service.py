@@ -1,4 +1,4 @@
-from stl import mesh
+import trimesh
 from config import Settings
 
 class CalcService:
@@ -6,8 +6,7 @@ class CalcService:
     @staticmethod
     def calc_price(file_path: str, material: str, speed: float):
         """
-        считает цену за модель,
-        возвращает словарь:
+        Возвращает словарь:
         {
             "volume_cm3": ...,
             "weight_g": ...,
@@ -19,26 +18,44 @@ class CalcService:
         if material not in Settings.materials:
             raise ValueError("Unknown material")
 
-        m = mesh.Mesh.from_file(file_path)
+        # --- Загружаем STL ---
+        mesh = trimesh.load(file_path, force='mesh')
 
-        # объем модели
-        volume_mm3, _, _ = m.get_mass_properties()
+        mesh.remove_infinite_values()
+        mesh.merge_vertices()
+        mesh.process(validate=True)
+
+        if not mesh.is_watertight:
+            mesh = mesh.fill_holes()
+
+        mesh.process(validate=True)
+
+        volume_mm3 = mesh.volume
         volume_cm3 = volume_mm3 / 1000
 
-        # масса
-        density = Settings.materials[material]["density"]
+        density = Settings.materials[material]["density"]  # г/см³
         weight_g = volume_cm3 * density
 
-        # время печати
+        # speed = скорость печати в см3/час или аналог (твоя же логика)
         time_h = volume_cm3 / speed
 
-        # цена
         price_per_kg = Settings.materials[material]["price"]
-        price_rub = (weight_g / 1000) * price_per_kg
+        material_cost = (weight_g / 1000) * price_per_kg
+
+        hour_rate = Settings.hour_rate        # ₽/ч
+        time_cost = time_h * hour_rate
+
+        electricity = getattr(Settings, "electricity_rub_h", 0)
+        electricity_cost = time_h * electricity
+
+        total_price = material_cost + time_cost + electricity_cost
+
+        min_price = Settings.min_price
+        total_price = max(total_price, min_price)
 
         return {
             "volume_cm3": round(volume_cm3, 2),
             "weight_g": round(weight_g, 2),
             "print_time_h": round(time_h, 2),
-            "price_rub": round(price_rub, 2) 
+            "price_rub": round(total_price, 2)
         }

@@ -5,7 +5,7 @@ from app.database.session import SessionLocal
 from app.services.cart_service import CartService
 from app.services.order_service import OrderService
 from app.services.user_service import UserService
-from ...keyboards.user.cart_menu import cart_actions_kb
+from ...keyboards.user.cart_kb import cart_actions_kb
 from ...keyboards.user.back_kb import back_kb
 
 from config import Settings
@@ -36,7 +36,7 @@ async def open_cart(callback: CallbackQuery):
             f"🔹 Заказ *{item.name}* №{item.id}\n"
             f"Количество: {item.quantity}\n"
             f"Материал: {item.material}\n"
-            f"Цена: {round(item.price_rub)} ₽\n"
+            f"Цена: {round(item.price_rub)} ₽\n\n"
         )
 
     await callback.message.edit_text(

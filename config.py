@@ -16,6 +16,10 @@ class Settings:
         if x.strip().isdigit()
     ]
 
+    hour_rate = 200          # ₽ за час работы принтера
+    min_price = 150          # минимальная стоимость заказа
+    electricity_rub_h = 5
+
     materials = {
         "PLA": {
             "density": 1.24,
@@ -33,7 +37,9 @@ class Settings:
 
     human_status = {
         OrderStatus.created: "Создан",
+        OrderStatus.accepted: "Принят в обработку",
         OrderStatus.processing: "В процессе",
-        OrderStatus.done: "Завершен",
+        OrderStatus.done: "Готов к выдаче",
+        OrderStatus.delivered: "Получен клиентом",
         OrderStatus.closed: "Закрыт"
     } # человеческие обозначения с OrderStatus

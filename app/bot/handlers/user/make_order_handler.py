@@ -8,10 +8,10 @@ from app.services.calc_service import CalcService
 from app.database.session import SessionLocal
 from app.services.user_service import UserService
 from app.services.cart_service import CartService
-from app.utils import send_clean_message
-from config import Settings
+from ...bot_utils import send_clean_message
+from ...states.order_fsm import OrderFSM
 
-from app.bot.keyboards.user.make_order_menu import (
+from app.bot.keyboards.user.make_order_kb import (
     cancel_kb,
     material_kb,
     color_kb,
@@ -19,8 +19,7 @@ from app.bot.keyboards.user.make_order_menu import (
     confirm_kb
 )
 
-from app.bot.keyboards.user.cart_menu import cart_menu_kb
-from ...states.order_fsm import OrderFSM
+from app.bot.keyboards.user.cart_kb import cart_menu_kb
 
 
 router = Router()
@@ -39,7 +38,9 @@ async def start_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
         "Отправьте .stl файл вашей модели.",
         reply_markup=cancel_kb()
     )
+
     await state.set_state(OrderFSM.upload_file)
+
     await callback.answer()
 
 
@@ -53,9 +54,6 @@ async def get_stl(message: Message, state: FSMContext, bot: Bot):
             state,
             "Отправьте файл формата .stl"
         )
-
-    # показываем ⌛
-    await send_clean_message(message, bot, state, "⌛")
 
     os.makedirs("files", exist_ok=True)
     file = await bot.get_file(message.document.file_id)
@@ -145,6 +143,7 @@ async def get_custom_color(message: Message, state: FSMContext, bot: Bot):
         parse_mode="Markdown",
         reply_markup=cancel_kb()
     )
+    
     await state.set_state(OrderFSM.full_name)
 
 
@@ -231,8 +230,6 @@ async def preview_order(message_or_callback, data, bot: Bot, state: FSMContext):
         f"├ ФИ: {data['full_name']}\n"
         f"└ Пожелания: {data.get('notes', '-')}\n\n"
         "Стоимость:\n"
-        f"├ Объём: {round(calc['volume_cm3'])} см³\n"
-        f"├ Вес: {round(calc['weight_g'])} г\n"
         f"├ За 1 шт: ~{round(data['price_one'])} ₽\n"
         f"└ За всё: ~{round(data['total_price'])} ₽\n\n"
         "*Добавить в корзину?*"
@@ -251,8 +248,6 @@ async def preview_order(message_or_callback, data, bot: Bot, state: FSMContext):
 # предосмотр товара, подтверждение и добавление в корзину
 @router.callback_query(F.data == "confirm_yes", OrderFSM.confirm)
 async def confirm_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    await send_clean_message(callback, bot, state, "⌛")
-
     data = await state.get_data()
     db = SessionLocal()
 
@@ -293,7 +288,7 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
         callback,
         bot,
         state,
-        "Товар успешно добавлен в корзину.\nМожете оформить заказ или добавить еще один заказ в корзину.",
+        "Товар успешно добавлен в вашу корзину.\n\nМожете оформить заказ или добавить еще один заказ в корзину.",
         reply_markup=cart_menu_kb()
     )
 

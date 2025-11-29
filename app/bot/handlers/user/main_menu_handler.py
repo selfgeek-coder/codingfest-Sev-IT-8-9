@@ -4,8 +4,8 @@ from aiogram.filters import Command
 
 from app.services.user_service import UserService
 from app.database.database import get_db
-from ...keyboards.user.main_menu import get_main_keyboard
-from ...keyboards.admin.main_menu import get_admin_main_keyboard
+from ...keyboards.user.main_menu_kb import get_main_keyboard
+from ...keyboards.admin.main_menu_kb import get_admin_main_keyboard
 from app.utils import is_admin
 
 router = Router()

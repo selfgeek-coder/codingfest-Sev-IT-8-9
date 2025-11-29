@@ -39,5 +39,7 @@ class Order(Base):
         default=lambda: datetime.now(ZoneInfo("Europe/Moscow"))
     )
 
+    order_position = Column(Integer, nullable=False, default=0)
+
     def __repr__(self):
         return f"<Order id={self.id} user_id={self.user_id}>"

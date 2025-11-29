@@ -71,31 +71,31 @@ def admin_order_actions_kb(order_id: int):
 
 
 def admin_status_select_kb(order_id: int):
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🟡 Выполняется",
-                    callback_data=f"admin_set_status_{order_id}_{OrderStatus.processing.value}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🟢 Готово",
-                    callback_data=f"admin_set_status_{order_id}_{OrderStatus.done.value}"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="🔴 Закрыт",
-                    callback_data=f"admin_set_status_{order_id}_{OrderStatus.closed.value}"
-                )
-            ],
-            [
-                InlineKeyboardButton(text="Назад", callback_data=f"admin_order_{order_id}")
-            ]
+    allowed_statuses = [
+        OrderStatus.processing,
+        OrderStatus.done,
+        OrderStatus.closed
+    ]
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text=Settings.human_status[status],
+                callback_data=f"admin_set_status_{order_id}_{status.value}"
+            )
         ]
-    )
+        for status in allowed_statuses
+    ]
+
+    buttons.append([
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data=f"admin_order_{order_id}"
+        )
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
 
 
 def admin_confirm_status_kb(order_id: int, new_status: str):

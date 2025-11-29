@@ -1,13 +1,14 @@
+import logging
+
 from aiogram import Router, F, Bot
-from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, FSInputFile
+from aiogram.types import CallbackQuery, FSInputFile
 
 from app.services.user_service import UserService
 from app.database.session import SessionLocal
 from app.services.order_service import OrderService
 from app.utils import is_admin
 from app.enums.order_status import OrderStatus
-from ...keyboards.admin.panel_menu import (
+from ...keyboards.admin.panel_kb import (
     admin_main_menu_kb,
     admin_orders_page_kb,
     admin_order_actions_kb,
@@ -31,7 +32,7 @@ async def admin_panel(callback: CallbackQuery):
     await callback.answer()
 
     await callback.message.edit_text(
-        "⚙️ *Админ-панель*\n\nВыберите действие:",
+        "⚙️ *Панель администратора*",
         parse_mode="Markdown",
         reply_markup=admin_main_menu_kb()
     )
@@ -56,7 +57,7 @@ async def admin_orders_menu(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("admin_page_"))
 async def admin_page(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
-        return await callback.answer("Нет доступа", show_alert=True)
+        return
 
     page = int(callback.data.replace("admin_page_", ""))
 
@@ -76,7 +77,7 @@ async def admin_page(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("admin_order_"))
 async def admin_show_order(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
-        return await callback.answer("Нет доступа", show_alert=True)
+        return
 
     order_id = int(callback.data.replace("admin_order_", ""))
     db = SessionLocal()
@@ -85,7 +86,8 @@ async def admin_show_order(callback: CallbackQuery):
     user = user_service.repo.get_user_by_db_id(db, order.user_id)
 
     text = (
-        f"📝 *Заказ №{order.id}* создан {order.created_at}\n\n"
+        f"📝 *Заказ №{order.id}* - {order.name}\n\n"
+        f"Создан в {order.created_at}\n\n"
         f"*Пользователь*:\n"
         f" ├ @{user.username or 'нет'}\n"
         f" └ ID: {user.chat_id}\n\n"
@@ -98,7 +100,7 @@ async def admin_show_order(callback: CallbackQuery):
         f" ├ Количество: {order.quantity}\n"
         f" ├ Материал: {order.material}\n"
         f" ├ Цвет: {order.color}\n"
-        f" └ Пожелания: {order.notes or 'нет'}\n\n"
+        f" └ Пожелания: {order.notes or '/'}\n\n"
 
         f"*Цена*:\n"
         f" ├ {order.price_rub} ₽ всего\n"
@@ -107,11 +109,11 @@ async def admin_show_order(callback: CallbackQuery):
         f"Статус заказа: *{Settings.human_status.get(order.status, order.status.value)}*"
     )
 
-
     try:
         await callback.message.delete()
-    except:
-        pass
+
+    except Exception as e:
+        logging.error(e)
 
     stl = FSInputFile(order.stl_path)
 
@@ -133,8 +135,9 @@ async def admin_back(callback: CallbackQuery):
 
     try:
         await callback.message.delete()
-    except:
-        pass
+
+    except Exception as e:
+        logging.error(e)
 
     await callback.message.answer(
         "*Список заказов:*",
@@ -163,13 +166,8 @@ async def admin_set_status(callback: CallbackQuery):
     order_id = int(parts[3])
     new_status = parts[4]
 
-    text = (
-        f"Подтвердить изменение статуса заказа #{order_id} "
-        f"на *{new_status}*?"
-    )
-
     await callback.message.edit_caption(
-        caption=text,
+        caption=f"Подтвердить изменение статуса заказа #{order_id} на *{new_status}*?",
         parse_mode="Markdown",
         reply_markup=admin_confirm_status_kb(order_id, new_status)
     )
@@ -192,14 +190,13 @@ async def admin_confirm_status(callback: CallbackQuery, bot: Bot):
         await bot.send_message(
             chat_id=user.chat_id,
             text=(
-                f"🔔 *Обновление статуса заказа*\n\n"
-                f"Статус вашего заказа №*{order_id}* был изменён на:\n"
-                f"*{Settings.human_status.get(OrderStatus(new_status), order.status.value)}*"
+                f"🔔 *Обновление статуса вашего заказа*.\n\n"
+                f"Статус вашего заказа №*{order_id}* был изменен на: '{Settings.human_status.get(OrderStatus(new_status), order.status.value)}'"
             ),
             parse_mode="Markdown"
         )
     except Exception as e:
-        print(f"Не удалось отправить уведомление пользователю: {e}")
+        logging.error(f"Не удалось отправить уведомление пользователю: {e}")
 
     await callback.message.edit_caption(
         caption=f"Статус заказа #{order_id} успешно изменён на *{Settings.human_status.get(OrderStatus(new_status), order.status.value)}*",
@@ -217,12 +214,12 @@ async def admin_export_excel(callback: CallbackQuery):
     db = SessionLocal()
     orders = order_service.get_all_orders(db)
 
-    filepath = "orders_export.xlsx"
+    filepath = "orders.xlsx"
     export_orders_to_excel(orders, filepath)
 
     await callback.message.answer_document(
         FSInputFile(filepath),
-        caption="Ваш excel файл со всеми заказами."
+        caption="Экспорт excel-таблицы со всеми заказами."
     )
 
     await callback.answer()

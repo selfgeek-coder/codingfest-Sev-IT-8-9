@@ -1,4 +1,5 @@
 aiogram
 sqlalchemy
 openpyxl
-numpy-stl
+trimesh
+scipy
