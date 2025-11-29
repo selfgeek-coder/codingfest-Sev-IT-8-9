@@ -43,24 +43,25 @@ python main.py
         └── 📁handlers
             └── 📁admin
                 ├── __init__.py
-                ├── panel.py
+                ├── panel_handler.py
             └── 📁user
                 ├── __init__.py
-                ├── cart.py
-                ├── main_menu.py
-                ├── make_order.py
-                ├── my_orders.py
+                ├── cart_handler.py
+                ├── main_menu_handler.py
+                ├── make_order_handler.py
+                ├── my_orders_handler.py
         └── 📁keyboards
             └── 📁admin
-                ├── main_menu.py
-                ├── panel_menu.py
+                ├── main_menu_kb.py
+                ├── panel_kb.py
             └── 📁user
                 ├── back_kb.py
-                ├── cart_menu.py
-                ├── main_menu.py
-                ├── make_order_menu.py
+                ├── cart_kb.py
+                ├── main_menu_kb.py
+                ├── make_order_kb.py
         └── 📁states
             ├── order_fsm.py
+        ├── bot_utils.py
     └── 📁database
         └── 📁models
             ├── cart.py
@@ -81,6 +82,7 @@ python main.py
         ├── user_service.py
     ├── excel.py
     └── utils.py
+
 ```
 
 ### Возможности бота
